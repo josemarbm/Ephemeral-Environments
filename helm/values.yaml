@@ -1,0 +1,177 @@
+image:
+  # -- Repository applied to all deployments
+  repository: gcr.io/ci-cd-280117/ephemeral-environments
+  pullPolicy: Always
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+app:
+  # -- The application Variables
+  envs:
+    tc: null
+    env: null
+
+  # -- Information like database password
+  secrets: {}
+
+## Server service configuration
+service:
+  # -- Create Service
+  create: true
+  # -- Server service http port
+  port: 3000
+  # -- Server service type [ClusterIP, NodePort, LoadBalancer]
+  type: ClusterIP
+  # -- Expose service Access from internet has COSTS :money_with_wings:
+  internalLoadBalancer: false
+
+# -- Enable an ingress resource for the Application
+virtualservice:
+  create: false
+  host: "*"
+  gateway: "default-gateway"
+  prefix: "/"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+deployStrategy:
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+  type: RollingUpdate
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+# -- Toggle and define pod-level security context.
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# -- Resource limits and requests for the Deployment
+resources:
+  limits:
+    cpu: 500m
+    memory: 500Mi
+  requests:
+    cpu: 50m
+    memory: 100Mi
+
+# -- The number pods to run
+replicaCount: 1
+autoscaling:
+  # -- Enable Horizontal Pod Autoscaler ([HPA])
+  enabled: true
+  # -- Minimum number of replicas for the [HPA]
+  minReplicas: 1
+  # -- Maximum number of replicas for the [HPA]
+  maxReplicas: 2
+  # -- Average CPU utilization percentage for [HPA]
+  targetCPUUtilizationPercentage: 90
+  # -- Average memory utilization percentage for the [HPA]
+  targetMemoryUtilizationPercentage: 80
+
+# -- [Node selector]
+nodeSelector: {}
+
+# -- [Tolerations] for use with node taints
+tolerations:
+  []
+
+  # -- Assign custom [affinity] rules to the deployment
+# affinity:
+#   nodeAffinity:
+#     requiredDuringSchedulingIgnoredDuringExecution:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: spot
+#               operator: In
+#               values:
+#                 - "true"
+#   podAntiAffinity:
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#       - podAffinityTerm:
+#           labelSelector:
+#             matchExpressions:
+#               - key: cloud.google.com/gke-spot
+#                 operator: Exists
+#           topologyKey: kubernetes.io/hostname
+#         weight: 100
+
+# --  ServiceEnty to External service passthroughTls Cluster, NATS, MEMCACHED, MYSQL, MONGO,
+# uncomment to enable
+serviceentry:
+  # - name: memcached-matrix
+  #   port: 11211
+  #   host: memcached-matrix.tc.local
+  #   address: 10.13.0.175
+pdb:
+  create: "false"
+# -- create preview environment
+pr:
+  enabled: "false"
+
+namespace:
+  enabled: "false"
+  name: "preview"
+  annotations:
+  labels:
+    istio-injection: enabled
+
+# TLS certificate configuration via cert-manager
+## Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/tls/#tls-certificates-used-by-argocd-server
+certificate:
+  # -- Deploy a Certificate resource (requires cert-manager)
+  enabled: false
+  # -- The name of the Secret that will be automatically created and managed by this Certificate resource
+  secretName: preview-domain-cert-dev
+  # -- Certificate primary domain (commonName)
+  domain: aephemeral-environments-feat-domain-18.preview.tradersclub.com.br
+  # -- Certificate Subject Alternate Names (SANs)
+  additionalHosts: []
+  # -- The requested 'duration' (i.e. lifetime) of the certificate.
+  # @default -- `""` (defaults to 2160h = 90d if not specified)
+  ## Ref: https://cert-manager.io/docs/usage/certificate/#renewal
+  duration: ""
+  # -- How long before the expiry a certificate should be renewed.
+  # @default -- `""` (defaults to 360h = 15d if not specified)
+  ## Ref: https://cert-manager.io/docs/usage/certificate/#renewal
+  renewBefore: ""
+  # Certificate issuer
+  ## Ref: https://cert-manager.io/docs/concepts/issuer
+  issuer:
+    # -- Certificate issuer group. Set if using an external issuer. Eg. `cert-manager.io`
+    group: "cert-manager.io"
+    # -- Certificate issuer kind. Either `Issuer` or `ClusterIssuer`
+    kind: "ClusterIssuer"
+    # -- Certificate issuer name. Eg. `letsencrypt`
+    name: "letsencrypt-dev-cluster"
+  # Private key of the certificate
+  privateKey:
+    # -- Rotation policy of private key when certificate is re-issued. Either: `Never` or `Always`
+    rotationPolicy: Never
+    # -- The private key cryptography standards (PKCS) encoding for private key. Either: `PCKS1` or `PKCS8`
+    encoding: PKCS1
+    # -- Algorithm used to generate certificate private key. One of: `RSA`, `Ed25519` or `ECDSA`
+    algorithm: RSA
+    # -- Key bit size of the private key. If algorithm is set to `Ed25519`, size is ignored.
+    size: 2048
+  # -- Annotations to be applied to the Server Certificate
+  annotations: {}
+  # -- Usages for the certificate
+  ### Ref: https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.KeyUsage
+  usages: []

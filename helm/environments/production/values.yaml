@@ -1,0 +1,15 @@
+image:
+  repository: gcr.io/ci-cd-280117/Ephemeral-Environments #Mudar para nome da aplicação
+
+app:
+  envs:
+    tc: "prod"
+    docs_key: "123"
+    server_port: ":5055" #Alterar para porta da aplicação
+    cache_url: "172.16.0.6:11211" #Alterar para cache da aplicação
+    cache_expiration: "1h"
+    cache_timeoput: "10s"
+    nats_url: "nats://nats.tc.local:14222, nats://nats.tc.local:24222, nats://nats.tc.local:34222"
+    auth_addr: "tcauth"
+    auth_port: "50051"
+    auth_timeout: "5s"

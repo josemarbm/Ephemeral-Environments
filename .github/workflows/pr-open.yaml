@@ -1,0 +1,84 @@
+name: Create Ephemeral Environment 
+# create simple trigger based on everytime we make change to this repository
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest #run this workflow on ubuntu instance
+    permissions: #make sure we add permission to read and write package
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v1 #checkouts your repo, so this workflow can access it
+
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.CICD_SERVICE_ACCOUNT_KEY }}'
+  
+      - name: 'Set up Cloud SDK'
+        env:
+          PROJECT_ID: ci-cd-280117    
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+    #   - name: Login to GCR
+    #     env:
+    #       PROJECT_ID: ci-cd-280117 #create env called PROJECT_ID consisted of our actual GCP Project ID
+    #     uses: google-github-actions/setup-gcloud@v0.3.0 #checkouts GCR repo, so this workflow can access it
+    #     with:
+    #       service_account_key: ${{ secrets.CICD_SERVICE_ACCOUNT_KEY }} #parse the value of repository secret called SERVICE_ACCOUNT_KEY that we have created earlier
+    #       project_id: ${{ env.PROJECT_ID }} #parse the value of env called PROJECT_ID
+    #       export_default_credentials: true
+          
+      - name: Build Docker Image
+        id: build
+        env:
+          IMAGE_NAME: ephemeral-environments #create env called IMAGE_NAME consisted of actual name of Docker Image after we build
+          PROJECT_ID: ci-cd-280117
+        run:  |
+          log()   { echo -e "\e[30;47m ${1} \e[0m ${@:2}"; }
+          SHA=${GITHUB_SHA::7}
+          log SHA ${SHA}
+          docker build -t $IMAGE_NAME:preview-${{ github.event.pull_request.number }} . #build the docker image
+        
+      - name: Configure Docker Client
+        run:  |-
+          gcloud auth configure-docker gcr.io --quiet #authenticate to gcr
+        
+      - name: Push Docker Image to Container Registry GCR
+        env: 
+          IMAGE_NAME: ephemeral-environments
+          PROJECT_ID: ci-cd-280117
+        #tag docker image to gcr image format then push to gcr
+        run: |-
+          docker tag $IMAGE_NAME:preview-${{ github.event.pull_request.number }} gcr.io/$PROJECT_ID/$IMAGE_NAME:preview-${{ github.event.pull_request.number }} 
+          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:preview-${{ github.event.pull_request.number }} 
+
+      - uses: mad9000/actions-find-and-replace-string@2
+        id: findandreplace
+        with:
+          source: ${{ github.head_ref }}
+          find: '/'        
+          replace: ''
+      - uses: ASzc/change-string-case-action@v2
+        id: lowercase
+        with:
+           string: ${{ steps.findandreplace.outputs.value }}
+      - name: Get the above output
+        run: echo "The replaced value is ${{ steps.lowercase.outputs.lowercase }}"
+
+      - name: PR comment Create URL
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          GITHUB_TOKEN: ${{ secrets.CICD_GITHUB_TOKEN }}
+          message: |
+             **Deployed** ! Access 👉 [Ephemeral Environments](https://ephemeral-environments-${{ steps.lowercase.outputs.lowercase }}-${{ github.event.pull_request.number}}.preview.tradersclub.com.br/) :cloud: ! 
+          reactions: eyes, rocket   
+          pr_number: ${{ github.event.pull_request.number }}      
+
+

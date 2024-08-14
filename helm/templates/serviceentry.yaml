@@ -1,0 +1,23 @@
+{{- range $key, $spec := .Values.serviceentry }}
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: {{ $spec.name | quote }}
+  labels:
+    app.kubernetes.io/name: {{ $spec.name | quote }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service | quote }}
+spec:
+  hosts:
+  - {{ $spec.host | quote }}
+  addresses:
+  - {{ $spec.address  | quote  }}
+  endpoints:
+  - address: {{ (print $spec.address "/32") | quote }}
+  ports: 
+  - name: {{ $spec.name | quote }}
+    number: {{ $spec.port }}
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: STATIC
+---
+{{- end }}

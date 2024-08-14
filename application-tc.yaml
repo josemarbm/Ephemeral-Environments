@@ -1,0 +1,66 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: ephemeral-environments-preview
+  labels:
+    env: preview
+    app: ephemeral-environments-preview
+  namespace: argocd
+spec:
+  generators:
+    - pullRequest:
+        github:
+          owner: j-mascarenhas-tc
+          repo: ephemeral-environments # (1)
+          tokenRef:
+            key: password
+            secretName: repo-2986222879 # (2)
+        requeueAfterSeconds: 60
+  template:
+    metadata:
+      name: "ephemeral-environments-{{branch_slug}}-{{number}}"
+    spec:
+      destination:
+        namespace: "preview-{{branch_slug}}-{{head_short_sha_7}}"
+        server: "https://104.154.183.45"
+      project: tc-dev
+      source:
+        # (3)
+        path: helm/
+        repoURL: "https://github.com/j-mascarenhas-tc/Ephemeral-Environments.git"
+        targetRevision: "{{head_sha}}" #HEAD
+        helm:
+          valueFiles:
+            - environments/preview/values.yaml
+            - environments/preview/secrets.yaml
+          parameters:
+            # (4)
+            - name: namespace.name
+              value: "preview-{{branch_slug}}-{{head_short_sha_7}}"
+            # (5)
+            - name: image.tag
+              value: "preview-{{number}}"
+            - name: virtualservice.host
+              value: "ephemeral-environments-{{branch_slug}}-{{number}}.preview.tradersclub.com.br"
+            - name: certificate.domain
+              value: "ephemeral-environments-{{branch_slug}}-{{number}}.preview.tradersclub.com.br"
+            - name: certificate.secretName
+              value: "ephemeral-environments-{{branch_slug}}-{{number}}"
+            - name: virtualservice.gateway
+              value: "ephemeral-environments"
+            #  value: "ephemeral-environments-{{branch_slug}}-{{number}}.preview.tradersclub.com.br"
+            # (6)
+            # - name: image
+            #   value: ephemeral-environments
+            # - name: name
+            #   value: ephemeral-environments
+            # - name: values
+            #   value: helm/environments/preview/values.yaml
+      # (7)
+      syncPolicy:
+        automated:
+          allowEmpty: true
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

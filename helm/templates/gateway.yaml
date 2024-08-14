@@ -1,0 +1,22 @@
+{{- if and .Values.certificate.enabled .Values.pr.enabled -}}
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: {{ include "Ephemeral-Environments.name" .}}
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - {{ .Values.certificate.domain | quote }}
+        {{- range .Values.certificate.additionalHosts }}
+        - {{ . | quote }}
+        {{- end }}
+      port:
+        name: https
+        number: 443
+        protocol: HTTPS
+      tls:
+        credentialName: {{ .Values.certificate.secretName }}
+        mode: SIMPLE
+{{- end }}

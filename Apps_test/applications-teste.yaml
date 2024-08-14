@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: ephemeral-environments
+  namespace: argocd
+spec:
+  generators:
+    - pullRequest:
+        github:
+          owner: j-mascarenhas-tc
+          repo: ephemeral-environments # (1)
+          # tokenRef:
+          #   key: token
+          #   secretName: github-token # (2)
+        requeueAfterSeconds: 120
+  template:
+    metadata:
+      name: "ephemeral-environments-{{branch}}-{{number}}"
+    spec:
+      source:
+        repoURL: "https://github.com/j-mascarenhas-tc/ephemeral-environments.git"
+        targetRevision: "{{head_sha}}"
+        path: charts/ephemeral-environments
+        helm:
+          parameters:
+            - name: "image.tag"
+              value: "pull-{{head_sha}}"
+            - name: "environment"
+              value: "PR-Vcluster-Dev"
+      project: default
+      destination:
+        server: "https://kubernetes.default.svc"
+        namespace: "ephemeral-environments-{{branch}}-{{number}}-namespace"
+      syncPolicy:
+        automated:
+          allowEmpty: true
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

@@ -1,0 +1,27 @@
+image:
+  repository: gcr.io/ci-cd-280117/ephemeral-environments #Mudar para nome da aplicação
+
+app:
+  envs:
+    tc: "preview"
+    env: "preview"
+
+virtualservice:
+  create: true
+  host: "*"
+  gateway: "preview-gateway"
+  prefix: "/"
+
+pr:
+  enabled: "true"
+
+namespace:
+  enabled: "true"
+  name: "preview"
+  annotations:
+  labels:
+    istio-injection: enabled
+
+certificate:
+  # -- Deploy a Certificate resource (requires cert-manager)
+  enabled: true

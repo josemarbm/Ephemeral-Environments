@@ -1,0 +1,26 @@
+{{- if and .Values.virtualservice.create .Values.service.create }}
+kind: VirtualService
+apiVersion: networking.istio.io/v1alpha3
+metadata:
+  name: {{ include "Ephemeral-Environments.name" . }}
+  labels:
+    {{- include "Ephemeral-Environments.labels" . | nindent 4 }}
+spec:
+  hosts:
+    - {{ .Values.virtualservice.host | default "*" | quote }}
+  gateways:
+    - {{ .Values.virtualservice.gateway | default "default-gateway" }}
+  http: 
+    - match:
+      - uri:
+          prefix: {{ .Values.virtualservice.prefix | default (printf "/%s" (regexReplaceAll "^tc" (include "Ephemeral-Environments.name" .) "")) }} 
+      {{- if .Values.virtualservice.rewrite }}
+      rewrite:
+        uri: {{ .Values.virtualservice.rewrite.uri | default "/" }}
+    {{- end }}           
+      route:
+        - destination:
+            host: {{ include "Ephemeral-Environments.name" . }}
+            port:
+              number: {{ .Values.service.port }}
+{{- end }}

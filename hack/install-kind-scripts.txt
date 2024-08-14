@@ -1,0 +1,4 @@
+bash <(curl -s https://raw.githubusercontent.com/eddycharly/kind-playground/main/cluster.sh)
+
+### KindPlayGound
+https://github.com/eddycharly/kind-playground/tree/main

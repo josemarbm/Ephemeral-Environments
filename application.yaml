@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: ephemeral-environments-preview
+  namespace: argocd
+spec:
+  generators:
+    - pullRequest:
+        github:
+          owner: j-mascarenhas-tc
+          repo: ephemeral-environments # (1)
+          # tokenRef:
+          #   key: token
+          #   secretName: github-token # (2)
+        requeueAfterSeconds: 60
+  template:
+    metadata:
+      name: "ephemeral-environments-{{branch_slug}}-{{number}}"
+    spec:
+      destination:
+        namespace: "preview-{{branch_slug}}-{{head_short_sha_7}}"
+        server: "https://kubernetes.default.svc"
+      project: default
+      source:
+        # (3)
+        path: helm/
+        repoURL: "https://github.com/j-mascarenhas-tc/ephemeral-environments.git"
+        targetRevision: "{{head_sha}}" #HEAD
+        helm:
+          valueFiles:
+            - environments/preview/values.yaml
+          parameters:
+            # (4)
+            - name: namespace
+              value: "preview-{{branch_slug}}-{{head_short_sha_7}}"
+            # (5)
+            - name: image.tag
+              value: "preview-{{number}}"
+            - name: virtualservice.host
+              value: "ephemeral-environments-{{branch_slug}}-{{number}}.preview-127.0.0.1.sslip.io"
+            #  value: "ephemeral-environments-{{branch_slug}}-{{number}}.preview.tradersclub.com.br"
+            # (6)
+            # - name: image
+            #   value: ephemeral-environments
+            # - name: name
+            #   value: ephemeral-environments
+            # - name: values
+            #   value: helm/environments/preview/values.yaml
+      # (7)
+      syncPolicy:
+        automated:
+          allowEmpty: true
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

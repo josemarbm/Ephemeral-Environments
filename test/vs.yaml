@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: ephemeral-environments-2
+  namespace: preview-feat-domain-5e51cf9
+spec:
+  gateways:
+    - preview/preview-gateway
+  hosts:
+    - "*"
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: tcweb.tc-web.svc.cluster.local
+            port:
+              number: 3000

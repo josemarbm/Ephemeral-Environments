@@ -1,0 +1,21 @@
+{{- if .Values.service.create }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "Ephemeral-Environments.name" . }}
+  {{- if and (eq .Values.service.internalLoadBalancer true) (eq .Values.service.type "LoadBalancer") }}
+  annotations:
+    networking.gke.io/load-balancer-type: "Internal"
+    networking.gke.io/internal-load-balancer-allow-global-access: "true"
+  {{- end }}
+  labels:
+    {{- include "Ephemeral-Environments.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "Ephemeral-Environments.selectorLabels" . | nindent 4 }}
+{{- end }}
