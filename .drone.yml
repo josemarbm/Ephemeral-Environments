@@ -11,8 +11,8 @@ steps:
     password:
       from_secret: docker_password
     repo: josemarbm23/ephemeral-environments 
+    auto_tag: true
     tags:
     - latest
-    - main
     ssh-agent-key:
       from_secret: private_key
