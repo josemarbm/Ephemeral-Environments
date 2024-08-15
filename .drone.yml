@@ -9,5 +9,5 @@ steps:
     tags:
     - latest
     - main
-    # ssh-agent-key:
-    #   from_secret: private_key
+    ssh-agent-key:
+      from_secret: private_key
