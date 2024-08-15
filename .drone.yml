@@ -11,16 +11,19 @@ steps:
     password:
       from_secret: docker_password
     repo: josemarbm23/ephemeral-environments 
-    auto_tag: true
-    # tags:
-    # - latest
+    #auto_tag: true
+    tags:
+    - latest
+    - ${DRONE_COMMIT_SHA:0:8}
     ssh-agent-key:
       from_secret: private_key
+
 trigger:
   branch:
   - main    
   event:
-  - push    
+  - push  
+    
   when:
     branch:
-    - main
+    - main  
