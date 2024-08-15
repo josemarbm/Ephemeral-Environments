@@ -18,4 +18,6 @@ steps:
       from_secret: private_key
 trigger:
   branch:
-  - main      
+  - main    
+  event:
+  - push    
