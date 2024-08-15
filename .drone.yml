@@ -21,3 +21,6 @@ trigger:
   - main    
   event:
   - push    
+  when:
+    branch:
+    - main
