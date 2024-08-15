@@ -30,10 +30,6 @@ run: ## run it will instance server
 run-watch: ## run-watch it will instance server with reload
 	VERSION=$(VERSION) nodemon --exec go run main.go --signal SIGTERM
 
-.PHONY: test
-test: ## runing unit tests with covarage
-	go test -v -failfast -coverprofile=coverage.out ./...
-
 .PHONY: docs
 docs: ## docs is a command to generate doc with swagger
 	swag init
