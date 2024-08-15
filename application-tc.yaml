@@ -22,7 +22,7 @@ spec:
     spec:
       destination:
         namespace: "preview-{{branch_slug}}-{{head_short_sha_7}}"
-        server: "https://1.1.1.1"
+        server: "https://1.1.2.2"
       project: tc-dev
       source:
         # (3)
