@@ -1,5 +1,5 @@
 kind: pipeline
-name: default
+name: build 
 
 steps:
 - name: docker
@@ -18,12 +18,12 @@ steps:
     ssh-agent-key:
       from_secret: private_key
 
-trigger:
-  branch:
-  - main    
-  event:
-  - push  
+# trigger:
+#   branch:
+#   - main    
+#   event:
+#   - push  
     
-  when:
-    branch:
-    - main  
+#   when:
+#     branch:
+#     - main  
